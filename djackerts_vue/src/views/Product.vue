@@ -53,6 +53,7 @@ export default {
 
             await axios.get(`/api/v1/products/${category_slug}/${product_slug}`).then(res => {
                 this.product = res.data
+                document.title = this.product.name + '| Djackets'
             }).catch (err => {
                 console.error(err)
             })
