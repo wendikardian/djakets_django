@@ -44,10 +44,12 @@ export default {
     this.getLatestProducts()
   },
   methods : {
-    getLatestProducts() {
-      axios.get('/api/v1/latest-products').then(res => {
+    async getLatestProducts() {
+      this.$store.commit('setIsLoading', true)
+      await axios.get('/api/v1/latest-products').then(res => {
         this.latestProducts = res.data
       }).catch(err => console.error(err))
+      this.$store.commit('setIsLoading', false)
     }
   }
 };
