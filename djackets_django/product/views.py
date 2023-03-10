@@ -1,9 +1,10 @@
 from django.http import Http404
+from django.db.models import Q
 
 # Create your views here
 from rest_framework.views import APIView
 from rest_framework.response import Response
-from .serializers import ProductSerializer
+from rest_framework.decorators import api_view
 
 from .models import Product
 from .models import Category
@@ -13,21 +14,22 @@ from .serializers import ProductSerializer, CategorySerializer
 class LatestProductsList(APIView):
     def get(self, request, format=None):
         products = Product.objects.all()[0: 4]
-        serializer = ProductSerializer(products, many = True)
+        serializer = ProductSerializer(products, many=True)
         return Response(serializer.data)
+
 
 class ProductDetail(APIView):
     def get_object(self, category_slug, product_slug):
         try:
-            return Product.objects.filter(category__slug = category_slug).get(slug=product_slug)
+            return Product.objects.filter(category__slug=category_slug).get(slug=product_slug)
         except Product.DoestNotExist:
             raise Http404
-    
+
     def get(self, request, category_slug, product_slug, format=None):
         product = self.get_object(category_slug, product_slug)
         serializer = ProductSerializer(product)
         return Response(serializer.data)
-    
+
 
 class CategoryDetail(APIView):
     def get_object(self, category_slug):
@@ -35,9 +37,18 @@ class CategoryDetail(APIView):
             return Category.objects.get(slug=category_slug)
         except Product.DoestNotExist:
             raise Http404
+
     def get(self, request, category_slug, format=None):
         category = self.get_object(category_slug)
         serializer = CategorySerializer(category)
         return Response(serializer.data)
 
-
+@api_view(['POST'])
+def search(request):
+    query = request.data.get('query', '')
+    if query:
+        products = Product.objects.filter(Q(name__icontains=query) | Q(description__icontains=query))
+        serializer = ProductSerializer(products, many=True)
+        return Response(serializer.data)
+    else:
+        return Response({"products": []})

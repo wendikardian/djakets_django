@@ -6,9 +6,10 @@
       </h2>
     </div>
     <product-box
-        v-for="product in category.products"
-        v-bind:key="product.id"
-        v-bind:product="product" />
+      v-for="product in category.products"
+      v-bind:key="product.id"
+      v-bind:product="product"
+    />
   </div>
 </template>
 
@@ -19,9 +20,9 @@ import productBox from "@/components/productBox.vue";
 
 export default {
   name: "Category",
-    components: {
-        productBox,
-    },
+  components: {
+    productBox,
+  },
   data() {
     return {
       category: {
@@ -31,6 +32,13 @@ export default {
   },
   mounted() {
     this.getCategory();
+  },
+  watch: {
+    $route(to, from) {
+      if (to.name === "Category") {
+        this.getCategory();
+      }
+    },
   },
   methods: {
     async getCategory() {
