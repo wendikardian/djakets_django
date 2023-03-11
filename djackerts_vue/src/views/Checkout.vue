@@ -1,10 +1,11 @@
 <template>
   <div class="page-checkout">
-    <div class="column is-multiline">
+    <div class="columns is-multiline">
       <div class="column is-12">
         <h1 class="title">Checkout</h1>
       </div>
-      <div class="column is-12 bo">
+
+      <div class="column is-12 box">
         <table class="table is-fullwidth">
           <thead>
             <tr>
@@ -14,14 +15,16 @@
               <th>Total</th>
             </tr>
           </thead>
+
           <tbody>
             <tr v-for="item in cart.items" v-bind:key="item.product.id">
               <td>{{ item.product.name }}</td>
-              <td>{{ item.product.price }}</td>
+              <td>${{ item.product.price }}</td>
               <td>{{ item.quantity }}</td>
               <td>${{ getItemTotal(item).toFixed(2) }}</td>
             </tr>
           </tbody>
+
           <tfoot>
             <tr>
               <td colspan="2">Total</td>
@@ -31,9 +34,11 @@
           </tfoot>
         </table>
       </div>
+
       <div class="column is-12 box">
-        <h2 class="subtitle">Shipping Details</h2>
-        <p class="has-text-grey mb-4">*All Fields are required</p>
+        <h2 class="subtitle">Shipping details</h2>
+
+        <p class="has-text-grey mb-4">* All fields are required</p>
 
         <div class="columns is-multiline">
           <div class="column is-6">
@@ -136,12 +141,16 @@ export default {
     document.title = "Checkout | Djackets";
 
     this.cart = this.$store.state.cart;
+
     if (this.cartTotalLength > 0) {
-            this.stripe = Stripe('pk_test_51H1HiuKBJV2qfWbD2gQe6aqanfw6Eyul5PO2KeOuSRlUMuaV4TxEtaQyzr9DbLITSZweL7XjK3p74swcGYrE2qEX00Hz7GmhMI')
-            const elements = this.stripe.elements();
-            this.card = elements.create('card', { hidePostalCode: true })
-            this.card.mount('#card-element')
-        }
+      this.stripe = Stripe(
+        "pk_test_51H1HiuKBJV2qfWbD2gQe6aqanfw6Eyul5PO2KeOuSRlUMuaV4TxEtaQyzr9DbLITSZweL7XjK3p74swcGYrE2qEX00Hz7GmhMI"
+      );
+      const elements = this.stripe.elements();
+      this.card = elements.create("card", { hidePostalCode: true });
+
+      this.card.mount("#card-element");
+    }
   },
   methods: {
     getItemTotal(item) {
@@ -149,36 +158,46 @@ export default {
     },
     submitForm() {
       this.errors = [];
+
       if (this.first_name === "") {
         this.errors.push("The first name field is missing!");
       }
+
       if (this.last_name === "") {
         this.errors.push("The last name field is missing!");
       }
+
       if (this.email === "") {
         this.errors.push("The email field is missing!");
       }
+
       if (this.phone === "") {
         this.errors.push("The phone field is missing!");
       }
+
       if (this.address === "") {
         this.errors.push("The address field is missing!");
       }
+
       if (this.zipcode === "") {
         this.errors.push("The zip code field is missing!");
       }
+
       if (this.place === "") {
         this.errors.push("The place field is missing!");
       }
 
       if (!this.errors.length) {
         this.$store.commit("setIsLoading", true);
+
         this.stripe.createToken(this.card).then((result) => {
           if (result.error) {
             this.$store.commit("setIsLoading", false);
+
             this.errors.push(
               "Something went wrong with Stripe. Please try again"
             );
+
             console.log(result.error.message);
           } else {
             this.stripeTokenHandler(result.token);
@@ -188,6 +207,7 @@ export default {
     },
     async stripeTokenHandler(token) {
       const items = [];
+
       for (let i = 0; i < this.cart.items.length; i++) {
         const item = this.cart.items[i];
         const obj = {
@@ -196,7 +216,7 @@ export default {
           price: item.product.price * item.quantity,
         };
 
-        item.push(obj);
+        items.push(obj);
       }
 
       const data = {
@@ -208,17 +228,18 @@ export default {
         place: this.place,
         phone: this.phone,
         items: items,
-        stripeToken: token.id,
+        stripe_token: token.id,
       };
 
       await axios
-        .post("/api/v1/checkout", data)
+        .post("/api/v1/checkout/", data)
         .then((response) => {
           this.$store.commit("clearCart");
           this.$router.push("/cart/success");
         })
         .catch((error) => {
-          this.errors.push("Something went wrong, please try again ");
+          this.errors.push("Something went wrong. Please try again");
+
           console.log(error);
         });
 
